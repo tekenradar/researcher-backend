@@ -1,8 +1,13 @@
 package v1
 
 type HttpEndpoints struct {
+	samlConfig *SAMLConfig
 }
 
-func NewHTTPHandler() *HttpEndpoints {
-	return &HttpEndpoints{}
+func NewHTTPHandler(
+	samlConfig *SAMLConfig,
+) *HttpEndpoints {
+	return &HttpEndpoints{
+		samlConfig: samlConfig,
+	}
 }
