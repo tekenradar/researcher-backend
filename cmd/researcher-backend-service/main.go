@@ -21,22 +21,28 @@ func main() {
 
 	logger.SetLevel(conf.LogLevel)
 
+	if !conf.GinDebugMode {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// Start webserver
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		// AllowAllOrigins: true,
 		AllowOrigins:     conf.AllowOrigins,
 		AllowMethods:     []string{"POST", "GET", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type", "Content-Length"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type", "Content-Length", "Api-Key"},
 		ExposeHeaders:    []string{"Authorization", "Content-Type", "Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 	router.GET("/health", healthCheckHandle)
+	// router.Static("/app", "/var/www/html/webapp")
 	v1Root := router.Group("/v1")
 
 	v1APIHandlers := v1.NewHTTPHandler(conf.SAMLConfig)
 	v1APIHandlers.AddAuthAPI(v1Root)
+	v1APIHandlers.AddStudyEventsAPI(v1Root)
 
 	logger.Info.Printf("Tekenradar researcher backend started, listening on port %s", conf.Port)
 	logger.Error.Fatal(router.Run(":" + conf.Port))

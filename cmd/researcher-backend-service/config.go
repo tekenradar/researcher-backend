@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	ENV_LOG_LEVEL = "LOG_LEVEL"
+	ENV_LOG_LEVEL      = "LOG_LEVEL"
+	ENV_GIN_DEBUG_MODE = "GIN_DEBUG_MODE"
 
 	ENV_RESEARCHER_BACKEND_LISTEN_PORT = "RESEARCHER_BACKEND_LISTEN_PORT"
 	ENV_CORS_ALLOW_ORIGINS             = "CORS_ALLOW_ORIGINS"
@@ -29,6 +30,7 @@ type Config struct {
 	Port         string
 	AllowOrigins []string
 	LogLevel     logger.LogLevel
+	GinDebugMode bool
 	SAMLConfig   *v1.SAMLConfig `yaml:"saml_config"`
 }
 
@@ -38,6 +40,7 @@ func InitConfig() Config {
 	conf.AllowOrigins = strings.Split(os.Getenv(ENV_CORS_ALLOW_ORIGINS), ",")
 
 	conf.LogLevel = getLogLevel()
+	conf.GinDebugMode = os.Getenv(ENV_GIN_DEBUG_MODE) == "true"
 
 	conf.SAMLConfig = &v1.SAMLConfig{
 		IDPUrl:                   os.Getenv(ENV_SAML_IDP_URL),                   // arbitrary name to refer to IDP in the logs
