@@ -1,13 +1,24 @@
 package v1
 
+import "github.com/tekenradar/researcher-backend/pkg/types"
+
 type HttpEndpoints struct {
-	samlConfig *SAMLConfig
+	samlConfig              *types.SAMLConfig
+	useDummyLogin           bool
+	loginSuccessRedirectURL string
+	apiKeys                 []string
 }
 
 func NewHTTPHandler(
-	samlConfig *SAMLConfig,
+	samlConfig *types.SAMLConfig,
+	useDummyLogin bool,
+	loginSuccessRedirectURL string,
+	apiKeys []string,
 ) *HttpEndpoints {
 	return &HttpEndpoints{
-		samlConfig: samlConfig,
+		samlConfig:              samlConfig,
+		useDummyLogin:           useDummyLogin,
+		loginSuccessRedirectURL: loginSuccessRedirectURL,
+		apiKeys:                 apiKeys,
 	}
 }

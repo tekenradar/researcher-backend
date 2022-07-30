@@ -9,27 +9,97 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"time"
 
 	"github.com/coneno/logger"
+	mw "github.com/tekenradar/researcher-backend/pkg/http/middlewares"
+	"github.com/tekenradar/researcher-backend/pkg/http/utils"
+	"github.com/tekenradar/researcher-backend/pkg/jwt"
 
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gin-gonic/gin"
-
-	mw "github.com/tekenradar/researcher-backend/pkg/http/middlewares"
 )
 
 func (h *HttpEndpoints) AddAuthAPI(rg *gin.RouterGroup) {
-	samlSP, err := h.InitSamlSP()
-	if err != nil {
-		logger.Error.Panic(err)
-	}
-	rg.POST("/saml/acs", gin.WrapF(samlSP.ServeACS))
-
 	auth := rg.Group("/auth")
 
-	app := http.HandlerFunc(h.loginWithSAML)
-	auth.GET("/login", mw.RequireQueryParams([]string{"role", "instance"}), gin.WrapH(samlSP.RequireAccount(app)))
+	if h.useDummyLogin {
+		auth.GET("/login", h.dummyLogin)
+	} else {
+		samlSP, err := h.InitSamlSP()
+		if err != nil {
+			logger.Error.Panic(err)
+		}
+		rg.POST("/saml/acs", gin.WrapF(samlSP.ServeACS))
+
+		app := http.HandlerFunc(h.loginWithSAML)
+		auth.GET("/login", gin.WrapH(samlSP.RequireAccount(app)))
+	}
+
+	auth.GET("/init-session", mw.HasValidAPIKey(h.apiKeys), h.initSession)
+	auth.GET("/logout", h.logout)
+
+	// TODO: check-session-infos - verify token infos and returm email address with the response
+	// TODO: logout
+}
+
+func (h *HttpEndpoints) dummyLogin(c *gin.Context) {
+	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.TokenMaxAge*time.Second, []string{
+		"study1",
+	})
+	if err != nil {
+		logger.Error.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	url := fmt.Sprintf("%s?id=%s", h.loginSuccessRedirectURL, token)
+	c.Redirect(http.StatusFound, url)
+}
+
+func (h *HttpEndpoints) initSession(c *gin.Context) {
+	token := c.DefaultQuery("token", "")
+
+	if token == "" {
+		var err error
+		token, err = c.Cookie(utils.AuthCookieName)
+		if err != nil {
+			logger.Error.Println(err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "no Authorization token found"})
+			return
+		}
+	}
+
+	claims, valid, err := jwt.ValidateToken(token)
+	if err != nil || !valid {
+		logger.Error.Printf("invalid token with err: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+
+	c.SetCookie(
+		utils.AuthCookieName,
+		token,
+		utils.TokenMaxAge,
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{"userID": claims.ID})
+}
+
+func (h *HttpEndpoints) logout(c *gin.Context) {
+	c.SetCookie(
+		utils.AuthCookieName,
+		"",
+		-1,
+		"/",
+		"",
+		true,
+		true,
+	)
 }
 
 func (h HttpEndpoints) InitSamlSP() (*samlsp.Middleware, error) {
@@ -82,43 +152,6 @@ func (h HttpEndpoints) InitSamlSP() (*samlsp.Middleware, error) {
 	return samlSP, nil
 }
 
-type GroupInfo struct {
-	Customer   string
-	Prefix     string
-	InstanceID string
-	Role       string
-}
-
-func parseSAMLgroupInfo(groups []string) []GroupInfo {
-	sep := "-"
-	infos := []GroupInfo{}
-	for _, groupText := range groups {
-		parts := strings.Split(groupText, sep)
-		if len(parts) != 4 {
-			logger.Error.Printf("'%s' has %d parts when using '%s' as a separator but 4 are expected.", groupText, len(parts), sep)
-			continue
-		}
-
-		c := GroupInfo{
-			Customer:   parts[0],
-			Prefix:     parts[1],
-			InstanceID: parts[2],
-			Role:       parts[3],
-		}
-		infos = append(infos, c)
-	}
-	return infos
-}
-
-func checkPermission(samlGroupInfos []GroupInfo, instanceID string, role string) (bool, *GroupInfo) {
-	for _, g := range samlGroupInfos {
-		if g.InstanceID == instanceID && role == g.Role {
-			return true, &g
-		}
-	}
-	return false, nil
-}
-
 type SAMLLoginInfo struct {
 	Username   string
 	Tokens     string
@@ -127,20 +160,6 @@ type SAMLLoginInfo struct {
 }
 
 func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
-	instanceIDs, ok := r.URL.Query()["instance"]
-	if !ok || len(instanceIDs[0]) < 1 {
-		http.Error(w, "Url Param 'instance' is missing", http.StatusBadRequest)
-		return
-	}
-	roles, ok := r.URL.Query()["role"]
-	if !ok || len(roles[0]) < 1 {
-		http.Error(w, "Url Param 'role' is missing", http.StatusBadRequest)
-		return
-	}
-
-	instanceID := instanceIDs[0]
-	role := roles[0]
-
 	s := samlsp.SessionFromContext(r.Context())
 	if s == nil {
 		logger.Error.Println("session not found")
@@ -162,7 +181,7 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	attributes := sa.GetAttributes()
-	groups, ok := attributes["http://schemas.xmlsoap.org/claims/Group"]
+	/*groups, ok := attributes["http://schemas.xmlsoap.org/claims/Group"]
 	if !ok {
 		err := fmt.Errorf("group infos not found in the response token for %s", email)
 		logger.Error.Println(err.Error())
@@ -170,18 +189,25 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	groupInfos := parseSAMLgroupInfo(groups)
-
-	hasPermission, usedGroupInfo := checkPermission(groupInfos, instanceID, role)
-	if !hasPermission {
-		err := fmt.Errorf("'%s' is not authorized to access '%s' with role '%s'.", email, instanceID, role)
-		logger.Error.Println(err.Error())
-		logger.Debug.Printf("valid group infos are %v", groupInfos)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
 	logger.Debug.Print(groupInfos)
-	logger.Debug.Print(usedGroupInfo)
+	*/
+	logger.Debug.Println(email)
+	logger.Debug.Println(attributes)
+
+	http.Redirect(w, r, "http://localhost:3001?id=1234567890", http.StatusFound)
+
+	/*
+
+		hasPermission, usedGroupInfo := checkPermission(groupInfos, instanceID, role)
+		if !hasPermission {
+			err := fmt.Errorf("'%s' is not authorized to access '%s' with role '%s'.", email, instanceID, role)
+			logger.Error.Println(err.Error())
+			logger.Debug.Printf("valid group infos are %v", groupInfos)
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+	*/
 
 	/*
 		req := umAPI.LoginWithExternalIDPMsg{

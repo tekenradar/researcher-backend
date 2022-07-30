@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
+	"github.com/tekenradar/researcher-backend/internal/config"
 	v1 "github.com/tekenradar/researcher-backend/pkg/http/v1"
 )
 
@@ -17,7 +18,7 @@ func healthCheckHandle(c *gin.Context) {
 
 func main() {
 
-	conf := InitConfig()
+	conf := config.InitConfig()
 
 	logger.SetLevel(conf.LogLevel)
 
@@ -40,7 +41,12 @@ func main() {
 	// router.Static("/app", "/var/www/html/webapp")
 	v1Root := router.Group("/v1")
 
-	v1APIHandlers := v1.NewHTTPHandler(conf.SAMLConfig)
+	v1APIHandlers := v1.NewHTTPHandler(
+		conf.SAMLConfig,
+		conf.UseDummyLogin,
+		conf.LoginSuccessRedirectURL,
+		conf.APIKeys,
+	)
 	v1APIHandlers.AddAuthAPI(v1Root)
 	v1APIHandlers.AddStudyEventsAPI(v1Root)
 
