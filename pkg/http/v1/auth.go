@@ -100,6 +100,7 @@ func (h *HttpEndpoints) logout(c *gin.Context) {
 		true,
 		true,
 	)
+	c.JSON(http.StatusOK, gin.H{"msg": "logout successful"})
 }
 
 func (h HttpEndpoints) InitSamlSP() (*samlsp.Middleware, error) {
