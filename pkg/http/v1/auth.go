@@ -38,15 +38,22 @@ func (h *HttpEndpoints) AddAuthAPI(rg *gin.RouterGroup) {
 
 	auth.GET("/init-session", mw.HasValidAPIKey(h.apiKeys), h.initSession)
 	auth.GET("/logout", h.logout)
-
-	// TODO: check-session-infos - verify token infos and returm email address with the response
-	// TODO: logout
 }
 
 func (h *HttpEndpoints) dummyLogin(c *gin.Context) {
 	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.TokenMaxAge*time.Second, []string{
-		"study1",
+		"tekenradar",
+		"tb-only",
+		"weekly-tb",
+		"k-em-contact",
+		"em-adult-contact",
+		"fever-adult-contact",
+		"tb-adult-contact",
+		"tb-kids-contact",
+	}, []string{
+		jwt.ROLE_ADMIN,
 	})
+
 	if err != nil {
 		logger.Error.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})

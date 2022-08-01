@@ -49,6 +49,8 @@ func main() {
 	)
 	v1APIHandlers.AddAuthAPI(v1Root)
 	v1APIHandlers.AddStudyEventsAPI(v1Root)
+	v1APIHandlers.AddStudyAccessAPI(v1Root)
+	v1APIHandlers.AddStudyManagementAPI(v1Root)
 
 	logger.Info.Printf("Tekenradar researcher backend started, listening on port %s", conf.Port)
 	logger.Error.Fatal(router.Run(":" + conf.Port))

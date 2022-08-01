@@ -16,6 +16,8 @@ func (h *HttpEndpoints) AddStudyEventsAPI(rg *gin.RouterGroup) {
 }
 
 func (h *HttpEndpoints) t0InviteEventHandl(c *gin.Context) {
+	// TODO: implement correct logic to handle T0 invites, by sorting them to correct categories
+
 	// TODO: for debugging, save POST body as a JSON
 	resp, err := ioutil.ReadAll(c.Request.Body)
 

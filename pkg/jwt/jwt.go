@@ -17,10 +17,15 @@ var (
 	secretKeyEnc string
 )
 
+const (
+	ROLE_ADMIN = "admin"
+)
+
 // UserClaims - Information a token enocodes
 type UserClaims struct {
 	ID      string   `json:"id,omitempty"`
 	Studies []string `json:"studies,omitempty"`
+	Roles   []string `json:"roles,omitempty"`
 	jwt.StandardClaims
 }
 
@@ -42,11 +47,12 @@ func getSecretKey() (newSecretKey []byte, err error) {
 }
 
 // GenerateNewToken create and signes a new token
-func GenerateNewToken(userID string, experiresIn time.Duration, studies []string) (string, error) {
+func GenerateNewToken(userID string, experiresIn time.Duration, studies []string, roles []string) (string, error) {
 	// Create the Claims
 	claims := UserClaims{
 		userID,
 		studies,
+		roles,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(experiresIn).Unix(),
 			IssuedAt:  time.Now().Unix(),
