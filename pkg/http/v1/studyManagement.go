@@ -32,7 +32,7 @@ func (h *HttpEndpoints) SM_getAllStudyInfos(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"studyInfos": []types.StudyInfo{}})
 		return
 	}
-	logger.Info.Printf("study infos fetched by '%s'", token.ID)
+	logger.Info.Printf("all study infos (ADMIN) fetched by '%s'", token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"studyInfos": studyInfos})
 }

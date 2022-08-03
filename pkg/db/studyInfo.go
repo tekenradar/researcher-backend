@@ -34,7 +34,7 @@ func (dbService *ResearcherDBService) FindStudyInfosByKeys(studyKeys []string) (
 	defer cancel()
 
 	filter := bson.M{
-		"studyKey": bson.M{
+		"key": bson.M{
 			"$in": studyKeys,
 		},
 	}
