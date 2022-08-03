@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/coneno/logger"
@@ -26,6 +28,16 @@ const (
 	ENV_SAML_SESSION_KEY_PATH          = "SAML_SESSION_KEY_PATH"
 
 	ENV_JWT_TOKEN_KEY = "JWT_TOKEN_KEY"
+
+	ENV_RESEARCHER_DB_CONNECTION_STR    = "RESEARCHER_DB_CONNECTION_STR"
+	ENV_RESEARCHER_DB_USERNAME          = "RESEARCHER_DB_USERNAME"
+	ENV_RESEARCHER_DB_PASSWORD          = "RESEARCHER_DB_PASSWORD"
+	ENV_RESEARCHER_DB_CONNECTION_PREFIX = "RESEARCHER_DB_CONNECTION_PREFIX"
+
+	ENV_DB_TIMEOUT           = "DB_TIMEOUT"
+	ENV_DB_IDLE_CONN_TIMEOUT = "DB_IDLE_CONN_TIMEOUT"
+	ENV_DB_MAX_POOL_SIZE     = "DB_MAX_POOL_SIZE"
+	ENV_DB_NAME_PREFIX       = "DB_DB_NAME_PREFIX"
 )
 
 // Config is the structure that holds all global configuration data
@@ -38,6 +50,7 @@ type Config struct {
 	SAMLConfig              *types.SAMLConfig `yaml:"saml_config"`
 	UseDummyLogin           bool
 	LoginSuccessRedirectURL string
+	ResearcherDBConfig      types.DBConfig
 }
 
 func InitConfig() Config {
@@ -60,6 +73,8 @@ func InitConfig() Config {
 		SessionKeyPath:  os.Getenv(ENV_SAML_SESSION_KEY_PATH),
 	}
 
+	conf.ResearcherDBConfig = getResearcherDBConfig()
+
 	if len(conf.SAMLConfig.IDPUrl) > 0 {
 		conf.AllowOrigins = append(conf.AllowOrigins, conf.SAMLConfig.IDPUrl)
 	}
@@ -79,5 +94,41 @@ func getLogLevel() logger.LogLevel {
 		return logger.LEVEL_WARNING
 	default:
 		return logger.LEVEL_INFO
+	}
+}
+
+func getResearcherDBConfig() types.DBConfig {
+	connStr := os.Getenv(ENV_RESEARCHER_DB_CONNECTION_STR)
+	username := os.Getenv(ENV_RESEARCHER_DB_USERNAME)
+	password := os.Getenv(ENV_RESEARCHER_DB_PASSWORD)
+	prefix := os.Getenv(ENV_RESEARCHER_DB_CONNECTION_PREFIX) // Used in test mode
+	if connStr == "" || username == "" || password == "" {
+		logger.Error.Fatal("Couldn't read DB credentials.")
+	}
+	URI := fmt.Sprintf(`mongodb%s://%s:%s@%s`, prefix, username, password, connStr)
+
+	var err error
+	Timeout, err := strconv.Atoi(os.Getenv(ENV_DB_TIMEOUT))
+	if err != nil {
+		logger.Error.Fatal("DB_TIMEOUT: " + err.Error())
+	}
+	IdleConnTimeout, err := strconv.Atoi(os.Getenv(ENV_DB_IDLE_CONN_TIMEOUT))
+	if err != nil {
+		logger.Error.Fatal("DB_IDLE_CONN_TIMEOUT" + err.Error())
+	}
+	mps, err := strconv.Atoi(os.Getenv("DB_MAX_POOL_SIZE"))
+	MaxPoolSize := uint64(mps)
+	if err != nil {
+		logger.Error.Fatal("DB_MAX_POOL_SIZE: " + err.Error())
+	}
+
+	DBNamePrefix := os.Getenv(ENV_DB_NAME_PREFIX)
+
+	return types.DBConfig{
+		URI:             URI,
+		Timeout:         Timeout,
+		IdleConnTimeout: IdleConnTimeout,
+		MaxPoolSize:     MaxPoolSize,
+		DBNamePrefix:    DBNamePrefix,
 	}
 }

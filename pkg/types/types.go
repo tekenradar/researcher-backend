@@ -8,3 +8,11 @@ type SAMLConfig struct {
 	SessionCertPath string `yaml:"session_cert"`
 	SessionKeyPath  string `yaml:"session_key"`
 }
+
+type DBConfig struct {
+	URI             string
+	DBNamePrefix    string
+	Timeout         int
+	MaxPoolSize     uint64
+	IdleConnTimeout int
+}

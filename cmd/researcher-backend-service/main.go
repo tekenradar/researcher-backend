@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/tekenradar/researcher-backend/internal/config"
+	"github.com/tekenradar/researcher-backend/pkg/db"
 	v1 "github.com/tekenradar/researcher-backend/pkg/http/v1"
 )
 
@@ -17,8 +18,9 @@ func healthCheckHandle(c *gin.Context) {
 }
 
 func main() {
-
 	conf := config.InitConfig()
+
+	researcherDBService := db.NewResearcherDBService(conf.ResearcherDBConfig)
 
 	logger.SetLevel(conf.LogLevel)
 
@@ -42,6 +44,7 @@ func main() {
 	v1Root := router.Group("/v1")
 
 	v1APIHandlers := v1.NewHTTPHandler(
+		researcherDBService,
 		conf.SAMLConfig,
 		conf.UseDummyLogin,
 		conf.LoginSuccessRedirectURL,
