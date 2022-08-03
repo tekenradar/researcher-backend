@@ -1,6 +1,8 @@
 package db
 
 import (
+	"errors"
+
 	"github.com/tekenradar/researcher-backend/pkg/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -24,10 +26,6 @@ func (dbService *ResearcherDBService) SaveStudyInfo(studyInfo types.StudyInfo) (
 	).Decode(&elem)
 	return elem, err
 }
-
-// TODO:
-// delete study info
-// find study infos (list of keys)
 
 func (dbService *ResearcherDBService) FindStudyInfosByKeys(studyKeys []string) (studyInfos []types.StudyInfo, err error) {
 	ctx, cancel := dbService.getContext()
@@ -98,4 +96,17 @@ func (dbService *ResearcherDBService) FindAllStudyInfos() (studyInfos []types.St
 	}
 
 	return studyInfos, nil
+}
+
+func (dbService *ResearcherDBService) DeleteStudyInfo(studyKey string) (count int64, err error) {
+	ctx, cancel := dbService.getContext()
+	defer cancel()
+
+	if studyKey == "" {
+		return 0, errors.New("studyKey must be defined")
+	}
+	filter := bson.M{"key": studyKey}
+
+	res, err := dbService.collectionRefStudyInfos().DeleteOne(ctx, filter)
+	return res.DeletedCount, err
 }

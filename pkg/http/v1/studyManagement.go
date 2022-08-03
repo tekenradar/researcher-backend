@@ -59,7 +59,26 @@ func (h *HttpEndpoints) SM_saveStudyInfo(c *gin.Context) {
 }
 
 func (h *HttpEndpoints) SM_deleteStudyInfo(c *gin.Context) {
-	// TODO: delete study info
-	// TODO: delete email notifications for study info
-	c.JSON(http.StatusNotImplemented, gin.H{"message": "not implemented"})
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+
+	count, err := h.researcherDB.DeleteStudyInfo(studyKey)
+	if err != nil {
+		logger.Error.Printf("error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if count < 1 {
+		logger.Error.Printf("study not deleted: %s", studyKey)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "study could not be deleted"})
+		return
+	}
+
+	err = h.researcherDB.DeleteEmailAllNotificationsForStudy(studyKey)
+	if err != nil {
+		logger.Error.Printf("error when removing study's email notifications for study key: %s", studyKey)
+	}
+
+	logger.Info.Printf("study info for '%s' deleted by '%s'", studyKey, token.ID)
+	c.JSON(http.StatusOK, gin.H{"message": "study deleted"})
 }
