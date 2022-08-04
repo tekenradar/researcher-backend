@@ -47,6 +47,16 @@ func (h *HttpEndpoints) getStudyInfos(c *gin.Context) {
 }
 
 func (h *HttpEndpoints) getStudyInfo(c *gin.Context) {
-	// TODO: fetch study info for a particular study
-	c.JSON(http.StatusNotImplemented, gin.H{"message": "not implemented"})
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+
+	studyInfo, err := h.researcherDB.FindStudyInfo(studyKey)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("study info for %s fetched by '%s'", studyKey, token.ID)
+
+	c.JSON(http.StatusOK, studyInfo)
 }

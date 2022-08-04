@@ -27,6 +27,17 @@ func (dbService *ResearcherDBService) SaveStudyInfo(studyInfo types.StudyInfo) (
 	return elem, err
 }
 
+func (dbService *ResearcherDBService) FindStudyInfo(studyKey string) (types.StudyInfo, error) {
+	ctx, cancel := dbService.getContext()
+	defer cancel()
+
+	filter := bson.M{"key": studyKey}
+
+	elem := types.StudyInfo{}
+	err := dbService.collectionRefStudyInfos().FindOne(ctx, filter).Decode(&elem)
+	return elem, err
+}
+
 func (dbService *ResearcherDBService) FindStudyInfosByKeys(studyKeys []string) (studyInfos []types.StudyInfo, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
