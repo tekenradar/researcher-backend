@@ -38,6 +38,13 @@ const (
 	ENV_DB_IDLE_CONN_TIMEOUT = "DB_IDLE_CONN_TIMEOUT"
 	ENV_DB_MAX_POOL_SIZE     = "DB_MAX_POOL_SIZE"
 	ENV_DB_NAME_PREFIX       = "DB_DB_NAME_PREFIX"
+
+	ENV_ADDR_STUDY_SERVICE = "ADDR_STUDY_SERVICE"
+	ENV_GRPC_MAX_MSG_SIZE  = "GRPC_MAX_MSG_SIZE"
+)
+
+const (
+	DefaultGRPCMaxMsgSize = 4194304
 )
 
 // Config is the structure that holds all global configuration data
@@ -51,6 +58,10 @@ type Config struct {
 	UseDummyLogin           bool
 	LoginSuccessRedirectURL string
 	ResearcherDBConfig      types.DBConfig
+	ServiceURLs             struct {
+		StudyService string `yaml:"study_service"`
+	}
+	MaxMsgSize int
 }
 
 func InitConfig() Config {
@@ -63,6 +74,8 @@ func InitConfig() Config {
 	conf.GinDebugMode = os.Getenv(ENV_GIN_DEBUG_MODE) == "true"
 	conf.UseDummyLogin = os.Getenv(ENV_USE_DUMMY_LOGIN) == "true"
 	conf.LoginSuccessRedirectURL = os.Getenv(ENV_LOGIN_SUCCESS_REDIRECT_URL)
+
+	conf.ServiceURLs.StudyService = os.Getenv(ENV_ADDR_STUDY_SERVICE)
 
 	conf.SAMLConfig = &types.SAMLConfig{
 		IDPUrl:          os.Getenv(ENV_SAML_IDP_URL),                   // arbitrary name to refer to IDP in the logs
@@ -77,6 +90,15 @@ func InitConfig() Config {
 
 	if len(conf.SAMLConfig.IDPUrl) > 0 {
 		conf.AllowOrigins = append(conf.AllowOrigins, conf.SAMLConfig.IDPUrl)
+	}
+
+	// Max message size for gRPC client
+	conf.MaxMsgSize = DefaultGRPCMaxMsgSize
+	ms, err := strconv.Atoi(os.Getenv(ENV_GRPC_MAX_MSG_SIZE))
+	if err != nil {
+		logger.Debug.Printf("using default max gRPC message size: %d", DefaultGRPCMaxMsgSize)
+	} else {
+		conf.MaxMsgSize = ms
 	}
 
 	return conf

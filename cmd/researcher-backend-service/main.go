@@ -10,6 +10,7 @@ import (
 
 	"github.com/tekenradar/researcher-backend/internal/config"
 	"github.com/tekenradar/researcher-backend/pkg/db"
+	"github.com/tekenradar/researcher-backend/pkg/grpc/clients"
 	v1 "github.com/tekenradar/researcher-backend/pkg/http/v1"
 )
 
@@ -19,8 +20,12 @@ func healthCheckHandle(c *gin.Context) {
 
 func main() {
 	conf := config.InitConfig()
-
 	researcherDBService := db.NewResearcherDBService(conf.ResearcherDBConfig)
+
+	grpcClients := &clients.APIClients{}
+	studyClient, studyServiceClose := clients.ConnectToStudyService(conf.ServiceURLs.StudyService, conf.MaxMsgSize)
+	defer studyServiceClose()
+	grpcClients.StudyService = studyClient
 
 	logger.SetLevel(conf.LogLevel)
 
@@ -44,6 +49,7 @@ func main() {
 	v1Root := router.Group("/v1")
 
 	v1APIHandlers := v1.NewHTTPHandler(
+		grpcClients,
 		researcherDBService,
 		conf.SAMLConfig,
 		conf.UseDummyLogin,
