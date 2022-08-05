@@ -76,7 +76,7 @@ func (h *HttpEndpoints) getStudyInfo(c *gin.Context) {
 func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
 	studyKey := c.Param("studyKey")
-	surveyKey := c.Param("datasetKey")
+	datasetKey := c.Param("datasetKey")
 
 	studyInfo, err := h.researcherDB.FindStudyInfo(studyKey)
 	if err != nil {
@@ -85,9 +85,23 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 		return
 	}
 
+	var dataset *types.DatasetInfo
+	for _, datasetInfo := range studyInfo.AvailableDatasets {
+		if datasetKey == datasetInfo.ID {
+			dataset = &datasetInfo
+			break
+		}
+	}
+	if dataset == nil {
+		msg := fmt.Sprintf("no dataset info found in study %s for dataset id %s", studyKey, datasetKey)
+		logger.Error.Println(msg)
+		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
+		return
+	}
+
 	var req studyAPI.ResponseExportQuery
 	req.StudyKey = "tekenradar"
-	req.SurveyKey = surveyKey
+	req.SurveyKey = dataset.SurveyKey
 
 	from := c.DefaultQuery("from", "")
 	if len(from) > 0 {
@@ -122,39 +136,29 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	}
 
 	// Check if query valid:
-	isAllowed := false
-	currentDatasetInfo := types.DatasetInfo{}
-	for _, datasetInfo := range studyInfo.AvailableDatasets {
-		if datasetInfo.SurveyKey == surveyKey {
-			if datasetInfo.EndDate > 0 && req.Until > datasetInfo.EndDate {
-				logger.Debug.Println("trying to access data that is later than allowed")
-				continue
-			}
-			if datasetInfo.StartDate > 0 && req.From < datasetInfo.StartDate {
-				logger.Debug.Println("trying to access data that is earlier than allowed")
-				continue
-			}
-			currentDatasetInfo = datasetInfo
-			isAllowed = true
-			break
-		}
-	}
 
-	if !isAllowed {
-		logger.Error.Printf("user %s tried to access dataset %s", token.ID, surveyKey)
+	if dataset.EndDate > 0 && req.Until > dataset.EndDate {
+		logger.Debug.Println("trying to access data that is later than allowed")
+		logger.Error.Printf("user %s tried to access dataset %s", token.ID, datasetKey)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "no permission to access this dataset"})
+		return
+	}
+	if dataset.StartDate > 0 && req.From < dataset.StartDate {
+		logger.Debug.Println("trying to access data that is earlier than allowed")
+		logger.Error.Printf("user %s tried to access dataset %s", token.ID, datasetKey)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "no permission to access this dataset"})
 		return
 	}
 
 	req.ItemFilter = &studyAPI.ResponseExportQuery_ItemFilter{
 		Mode: studyAPI.ResponseExportQuery_ItemFilter_EXCLUDE,
-		Keys: currentDatasetInfo.ExcludeColumns,
+		Keys: dataset.ExcludeColumns,
 	}
 
 	stream, err := h.clients.StudyService.GetResponsesWideFormatCSV(context.Background(), &req)
 	if err != nil {
 		st := status.Convert(err)
-		logger.Error.Printf("user %s tried to access dataset %s resulted in error %s", token.ID, surveyKey, st.Message())
+		logger.Error.Printf("user %s tried to access dataset %s resulted in error %s", token.ID, datasetKey, st.Message())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": st.Message()})
 		return
 	}
@@ -178,7 +182,7 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	contentType := "text/csv"
 
 	extraHeaders := map[string]string{
-		"Content-Disposition": `attachment; filename=` + fmt.Sprintf("%s_%s.csv", studyKey, surveyKey),
+		"Content-Disposition": `attachment; filename=` + fmt.Sprintf("%s_%s.csv", studyKey, dataset.SurveyKey),
 	}
 
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)
