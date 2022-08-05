@@ -21,6 +21,18 @@ func (dbService *ResearcherDBService) AddParticipantContact(studyKey string, pc 
 	return id.Hex(), err
 }
 
+func (dbService *ResearcherDBService) UpdateKeepParticipantContactStatus(studyKey string, contactID string, value bool) error {
+	ctx, cancel := dbService.getContext()
+	defer cancel()
+
+	_id, _ := primitive.ObjectIDFromHex(contactID)
+	filter := bson.M{"_id": _id}
+
+	update := bson.M{"$set": bson.M{"keepContactData": value}}
+	_, err := dbService.collectionRefParticipantContacts(studyKey).UpdateOne(ctx, filter, update)
+	return err
+}
+
 func (dbService *ResearcherDBService) FindParticipantContacts(studyKey string) (pcs []types.ParticipantContact, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
