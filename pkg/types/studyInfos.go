@@ -14,7 +14,10 @@ type StudyInfo struct {
 		DatasetExporter bool `bson:"datasetExporter" json:"datasetExporter"`
 		Contacts        bool `bson:"contacts" json:"contacts"`
 	} `bson:"features" json:"features"`
-	AvailableDatasets []DatasetInfo `bson:"availableDatasets" json:"availableDatasets"`
+	AvailableDatasets    []DatasetInfo `bson:"availableDatasets" json:"availableDatasets"`
+	ContactFeatureConfig struct {
+		IncludeWithParticipantFlags map[string]string `bson:"includeWithParticipantFlags" json:"includeWithParticipantFlags"`
+	} `bson:"contactFeatureConfig" json:"contactFeatureConfig"`
 }
 
 type DatasetInfo struct {
