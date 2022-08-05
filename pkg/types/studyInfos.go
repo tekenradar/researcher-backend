@@ -18,6 +18,7 @@ type StudyInfo struct {
 }
 
 type DatasetInfo struct {
+	ID             string   `bson:"id" json:"id"`
 	SurveyKey      string   `bson:"surveyKey" json:"surveyKey"`
 	Name           string   `bson:"name" json:"name"`
 	ExcludeColumns []string `bson:"excludeColumns" json:"excludeColumns"`
