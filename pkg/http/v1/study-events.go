@@ -1,11 +1,13 @@
 package v1
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/coneno/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/influenzanet/study-service/pkg/studyengine"
+	"github.com/tekenradar/researcher-backend/pkg/types"
 )
 
 func (h *HttpEndpoints) AddStudyEventsAPI(rg *gin.RouterGroup) {
@@ -16,29 +18,54 @@ func (h *HttpEndpoints) AddStudyEventsAPI(rg *gin.RouterGroup) {
 }
 
 func (h *HttpEndpoints) t0InviteEventHandl(c *gin.Context) {
-	// TODO: implement correct logic to handle T0 invites, by sorting them to correct categories
-
-	// TODO: for debugging, save POST body as a JSON
-	resp, err := ioutil.ReadAll(c.Request.Body)
-
+	var req studyengine.ExternalEventPayload
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error.Printf("error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	studyInfos, err := h.researcherDB.FindAllStudyInfos()
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "Unable to read request body",
-		})
+		logger.Error.Printf("error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	err1 := ioutil.WriteFile("T0_invite_event.json", resp, 0644)
-
-	if err1 != nil {
-		fmt.Println("error:", err1)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "Unable to save the file",
-		})
+	pc, err := extractParticipantContactInfosFromEvent(req)
+	if err != nil {
+		logger.Error.Printf("error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// File saved successfully. Return proper result
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Your file has been successfully saved."})
+	for _, studyInfo := range studyInfos {
+		if !studyInfo.Features.Contacts {
+			continue
+		}
+
+		_, err := h.researcherDB.AddParticipantContact(studyInfo.Key, pc)
+		if err != nil {
+			logger.Error.Printf("failed to create participant contact object with error: %v", err)
+			continue
+		}
+
+		// TODO: send notifications
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "event processed"})
+}
+
+func extractParticipantContactInfosFromEvent(event studyengine.ExternalEventPayload) (pc types.ParticipantContact, err error) {
+	pc = types.ParticipantContact{
+		AddedAt:         time.Now().Unix(),
+		ParticipantID:   event.ParticipantState.ParticipantID,
+		SessionID:       event.ParticipantState.CurrentStudySession,
+		KeepContactData: false,
+		Notes:           []types.ContactNote{},
+	}
+	// TODO: object
+	// TODO: general
+	// TODO: details
+
+	return
 }
