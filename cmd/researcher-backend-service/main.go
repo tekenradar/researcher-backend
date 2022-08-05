@@ -12,6 +12,11 @@ import (
 	"github.com/tekenradar/researcher-backend/pkg/db"
 	"github.com/tekenradar/researcher-backend/pkg/grpc/clients"
 	v1 "github.com/tekenradar/researcher-backend/pkg/http/v1"
+	"github.com/tekenradar/researcher-backend/pkg/runner"
+)
+
+const (
+	runnerCooldownInSeconds = 3600 * 6
 )
 
 func healthCheckHandle(c *gin.Context) {
@@ -32,6 +37,10 @@ func main() {
 	if !conf.GinDebugMode {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
+	// Start runner
+	backgroundRunner := runner.NewRunner(researcherDBService, runnerCooldownInSeconds)
+	backgroundRunner.Run()
 
 	// Start webserver
 	router := gin.Default()
