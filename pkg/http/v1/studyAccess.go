@@ -36,7 +36,7 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 		{
 			studyGroup.GET("/", h.getStudyInfo)
 			studyGroup.GET("/data/:datasetKey", h.downloadDataset) // ? from=1213123&until=12313212
-			// TODO: fetch contact infos
+			studyGroup.GET("/participant-contacts", h.getParticipantContacts)
 			// TODO: mark participant contact info as permantent (toggle)
 			// TODO: save participant contact note
 			// TODO: fetch notification subscriptions
@@ -71,6 +71,21 @@ func (h *HttpEndpoints) getStudyInfo(c *gin.Context) {
 	logger.Info.Printf("study info for %s fetched by '%s'", studyKey, token.ID)
 
 	c.JSON(http.StatusOK, studyInfo)
+}
+
+func (h *HttpEndpoints) getParticipantContacts(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+
+	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", studyKey, token.ID)
+
+	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
 }
 
 func (h *HttpEndpoints) downloadDataset(c *gin.Context) {

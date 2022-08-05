@@ -6,6 +6,7 @@ import (
 	"github.com/tekenradar/researcher-backend/pkg/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (dbService *ResearcherDBService) AddParticipantContact(studyKey string, pc types.ParticipantContact) (string, error) {
@@ -18,6 +19,39 @@ func (dbService *ResearcherDBService) AddParticipantContact(studyKey string, pc 
 	}
 	id := res.InsertedID.(primitive.ObjectID)
 	return id.Hex(), err
+}
+
+func (dbService *ResearcherDBService) FindParticipantContacts(studyKey string) (pcs []types.ParticipantContact, err error) {
+	ctx, cancel := dbService.getContext()
+	defer cancel()
+
+	filter := bson.M{}
+	batchSize := int32(32)
+	opts := options.FindOptions{
+		BatchSize: &batchSize,
+	}
+	cur, err := dbService.collectionRefParticipantContacts(studyKey).Find(ctx, filter, &opts)
+	if err != nil {
+		return pcs, err
+	}
+	defer cur.Close(ctx)
+
+	pcs = []types.ParticipantContact{}
+	for cur.Next(ctx) {
+		var result types.ParticipantContact
+		err := cur.Decode(&result)
+
+		if err != nil {
+			return pcs, err
+		}
+
+		pcs = append(pcs, result)
+	}
+	if err := cur.Err(); err != nil {
+		return pcs, err
+	}
+
+	return pcs, nil
 }
 
 // TODO: add note to entry

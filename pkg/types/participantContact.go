@@ -15,7 +15,7 @@ type ParticipantContact struct {
 
 type ContactDetailsGeneralData struct {
 	Age          int    `bson:"age" json:"age"`
-	Gender       string `bson:"string" json:"string"`
+	Gender       string `bson:"gender" json:"gender"`
 	OtherStudies bool   `bson:"otherStudies" json:"otherStudies"`
 }
 
