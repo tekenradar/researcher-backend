@@ -38,8 +38,8 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 			studyGroup.GET("/data/:datasetKey", h.downloadDataset) // ? from=1213123&until=12313212
 			studyGroup.GET("/participant-contacts", h.getParticipantContacts)
 			studyGroup.GET("/participant-contacts/:contactID/keep", h.changeParticipantContactKeepStatus) // ?value=true
-			// TODO: mark participant contact info as permantent (toggle)
-			// TODO: save participant contact note
+			studyGroup.POST("/participant-contacts/:contactID/note", h.addNoteToParticipantContact)
+
 			// TODO: fetch notification subscriptions
 		}
 	}
@@ -110,6 +110,36 @@ func (h *HttpEndpoints) changeParticipantContactKeepStatus(c *gin.Context) {
 		return
 	}
 	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", studyKey, token.ID)
+
+	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
+}
+
+func (h *HttpEndpoints) addNoteToParticipantContact(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+	contactID := c.Param("contactID")
+
+	var req types.ContactNote
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error.Printf("error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.researcherDB.AddNoteToParticipantContact(studyKey, contactID, req)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("partcipant contacts note added in study %s fetched by '%s'", studyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
 }
