@@ -39,8 +39,9 @@ const (
 	ENV_DB_MAX_POOL_SIZE     = "DB_MAX_POOL_SIZE"
 	ENV_DB_NAME_PREFIX       = "DB_DB_NAME_PREFIX"
 
-	ENV_ADDR_STUDY_SERVICE = "ADDR_STUDY_SERVICE"
-	ENV_GRPC_MAX_MSG_SIZE  = "GRPC_MAX_MSG_SIZE"
+	ENV_ADDR_STUDY_SERVICE        = "ADDR_STUDY_SERVICE"
+	ENV_ADDR_EMAIL_CLIENT_SERVICE = "ADDR_EMAIL_CLIENT_SERVICE"
+	ENV_GRPC_MAX_MSG_SIZE         = "GRPC_MAX_MSG_SIZE"
 )
 
 const (
@@ -60,6 +61,7 @@ type Config struct {
 	ResearcherDBConfig      types.DBConfig
 	ServiceURLs             struct {
 		StudyService string `yaml:"study_service"`
+		EmailClient  string `yaml:"email_client_service"`
 	}
 	MaxMsgSize int
 }
@@ -76,6 +78,7 @@ func InitConfig() Config {
 	conf.LoginSuccessRedirectURL = os.Getenv(ENV_LOGIN_SUCCESS_REDIRECT_URL)
 
 	conf.ServiceURLs.StudyService = os.Getenv(ENV_ADDR_STUDY_SERVICE)
+	conf.ServiceURLs.EmailClient = os.Getenv(ENV_ADDR_EMAIL_CLIENT_SERVICE)
 
 	conf.SAMLConfig = &types.SAMLConfig{
 		IDPUrl:          os.Getenv(ENV_SAML_IDP_URL),                   // arbitrary name to refer to IDP in the logs

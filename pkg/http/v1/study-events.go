@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/coneno/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/influenzanet/messaging-service/pkg/api/email_client_service"
 	"github.com/influenzanet/study-service/pkg/studyengine"
 	mw "github.com/tekenradar/researcher-backend/pkg/http/middlewares"
 	"github.com/tekenradar/researcher-backend/pkg/http/utils"
@@ -58,7 +61,27 @@ func (h *HttpEndpoints) t0InviteEventHandl(c *gin.Context) {
 			continue
 		}
 
-		// TODO: send notifications
+		subs, err := h.researcherDB.FindNotificationSubscriptions(studyInfo.Key, "contact")
+		if err != nil {
+			logger.Debug.Printf("failed to fetch notification subscriptions: %v", err)
+			continue
+		}
+		for _, sub := range subs {
+
+			_, err := h.clients.EmailClientService.SendEmail(context.TODO(), &email_client_service.SendEmailReq{
+				To:      []string{sub.Email},
+				Subject: fmt.Sprintf("Tekenradar - new contact entry added in study %s", studyInfo.Name),
+				Content: fmt.Sprintf(
+					"A participant matching the flags for %s (%s) study just entered contact information. \n\nIf no action is taken, the entry will automatically be removed from the system in 12 weeks. \n\n You are receiving this message because your email address is registered in the tekenradar researcher app for this study. Contact: tekenradar@rivm.nl",
+					studyInfo.Name, studyInfo.Key,
+				),
+			})
+			if err != nil {
+				logger.Debug.Printf("failed to send notification for %s: %v", sub.Email, err)
+				continue
+			}
+		}
+
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "event processed"})

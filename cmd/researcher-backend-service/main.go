@@ -32,6 +32,10 @@ func main() {
 	defer studyServiceClose()
 	grpcClients.StudyService = studyClient
 
+	emailClient, emailServiceClose := clients.ConnectToEmailService(conf.ServiceURLs.EmailClient, conf.MaxMsgSize)
+	defer emailServiceClose()
+	grpcClients.EmailClientService = emailClient
+
 	logger.SetLevel(conf.LogLevel)
 
 	if !conf.GinDebugMode {

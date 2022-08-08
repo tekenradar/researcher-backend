@@ -6,17 +6,19 @@ require (
 	github.com/coneno/logger v1.2.1
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
-	github.com/golang-jwt/jwt/v4 v4.1.0
+	github.com/golang-jwt/jwt/v4 v4.2.0
+	github.com/influenzanet/go-utils v0.2.10
+	github.com/influenzanet/messaging-service v1.1.0
 	github.com/influenzanet/study-service v1.1.0
 	go.mongodb.org/mongo-driver v1.10.0
+	google.golang.org/grpc v1.47.0
 )
 
 require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/influenzanet/go-utils v0.2.10 // indirect
-	github.com/influenzanet/logging-service v0.1.0 // indirect
+	github.com/influenzanet/logging-service v0.2.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
@@ -31,8 +33,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210809142519-0135a39c2737 // indirect
-	google.golang.org/grpc v1.39.1 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 )
 
 require (
