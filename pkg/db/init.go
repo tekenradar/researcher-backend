@@ -49,8 +49,6 @@ func NewResearcherDBService(configs types.DBConfig) *ResearcherDBService {
 		DBNamePrefix: configs.DBNamePrefix,
 	}
 
-	// TODO: create indexes
-
 	return ResearcherDBService
 }
 
@@ -60,7 +58,7 @@ func (dbService *ResearcherDBService) collectionRefStudyInfos() *mongo.Collectio
 }
 
 func (dbService *ResearcherDBService) collectionRefEmailNotifications(studyKey string) *mongo.Collection {
-	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("email-notifications" + studyKey)
+	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("email-notifications-" + studyKey)
 }
 
 func (dbService *ResearcherDBService) collectionRefParticipantContacts(studyKey string) *mongo.Collection {

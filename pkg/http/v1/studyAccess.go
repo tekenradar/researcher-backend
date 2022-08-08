@@ -41,6 +41,9 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 			studyGroup.POST("/participant-contacts/:contactID/note", h.addNoteToParticipantContact)
 
 			// TODO: fetch notification subscriptions
+			studyGroup.GET("/notifications", h.fetchNotificationSubscriptions) // ?topic=value
+			studyGroup.POST("/notifications", h.addNotificationSubscription)
+			studyGroup.DELETE("/notifications/:notificationID", h.deleteNotificationSubscription)
 		}
 	}
 }
@@ -257,4 +260,65 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	}
 
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)
+}
+
+func (h *HttpEndpoints) fetchNotificationSubscriptions(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+	topic := c.DefaultQuery("topic", "")
+
+	subs, err := h.researcherDB.FindNotificationSubscriptions(studyKey, topic)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("email notification subs for %s fetched by '%s'", studyKey, token.ID)
+
+	c.JSON(http.StatusOK, gin.H{"emailNotifications": subs})
+}
+
+func (h *HttpEndpoints) addNotificationSubscription(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+
+	var req types.NotificationSubscription
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error.Printf("error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err := h.researcherDB.AddNotificationSubscription(studyKey, req)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("email notification added for %s fetched by '%s'", studyKey, token.ID)
+
+	subs, err := h.researcherDB.FindNotificationSubscriptions(studyKey, req.Topic)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"emailNotifications": subs})
+}
+
+func (h *HttpEndpoints) deleteNotificationSubscription(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+	notificationID := c.Param("notificationID")
+
+	_, err := h.researcherDB.DeleteNotificationSubscription(studyKey, notificationID)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("email notification deleted for %s fetched by '%s'", studyKey, token.ID)
+
+	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }

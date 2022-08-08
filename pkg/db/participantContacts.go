@@ -83,9 +83,6 @@ func (dbService *ResearcherDBService) FindParticipantContacts(studyKey string) (
 	return pcs, nil
 }
 
-// TODO: add note to entry
-// TODO: mark entry as permanent
-
 // Remove entries after certain time if not marked as permanent
 func (dbService *ResearcherDBService) CleanUpExpiredParticipantContacts(studyKey string, deleteAfterInDays int) error {
 	ctx, cancel := dbService.getContext()
