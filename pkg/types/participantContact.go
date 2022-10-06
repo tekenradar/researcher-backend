@@ -3,14 +3,14 @@ package types
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type ParticipantContact struct {
-	ID              primitive.ObjectID        `bson:"_id,omitempty" json:"id,omitempty"`
-	AddedAt         int64                     `bson:"addedAt" json:"addedAt"`
-	SessionID       string                    `bson:"sessionID" json:"sessionID"`
-	ParticipantID   string                    `bson:"participantID" json:"participantID"`
-	KeepContactData bool                      `bson:"keepContactData" json:"keepContactData"`
-	General         ContactDetailsGeneralData `bson:"general" json:"general"`
-	ContactData     ContactDetailsContactData `bson:"contactData" json:"contactData"`
-	Notes           []ContactNote             `bson:"notes" json:"notes"`
+	ID              primitive.ObjectID         `bson:"_id,omitempty" json:"id,omitempty"`
+	AddedAt         int64                      `bson:"addedAt" json:"addedAt"`
+	SessionID       string                     `bson:"sessionID" json:"sessionID"`
+	ParticipantID   string                     `bson:"participantID" json:"participantID"`
+	KeepContactData bool                       `bson:"keepContactData" json:"keepContactData"`
+	General         *ContactDetailsGeneralData `bson:"general" json:"general"`
+	ContactData     *ContactDetailsContactData `bson:"contactData" json:"contactData"`
+	Notes           []ContactNote              `bson:"notes" json:"notes"`
 }
 
 type ContactDetailsGeneralData struct {

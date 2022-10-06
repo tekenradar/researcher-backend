@@ -39,6 +39,7 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 			studyGroup.GET("/participant-contacts", h.getParticipantContacts)
 			studyGroup.GET("/participant-contacts/:contactID/keep", h.changeParticipantContactKeepStatus) // ?value=true
 			studyGroup.POST("/participant-contacts/:contactID/note", h.addNoteToParticipantContact)
+			studyGroup.DELETE("/participant-contacts/:contactID", h.deleteParticipantContact)
 
 			// TODO: fetch notification subscriptions
 			studyGroup.GET("/notifications", h.fetchNotificationSubscriptions) // ?topic=value
@@ -130,6 +131,29 @@ func (h *HttpEndpoints) addNoteToParticipantContact(c *gin.Context) {
 	}
 
 	err := h.researcherDB.AddNoteToParticipantContact(studyKey, contactID, req)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("partcipant contacts note added in study %s fetched by '%s'", studyKey, token.ID)
+
+	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
+}
+
+func (h *HttpEndpoints) deleteParticipantContact(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	studyKey := c.Param("studyKey")
+	contactID := c.Param("contactID")
+
+	err := h.researcherDB.DeleteParticipantContact(studyKey, contactID)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})

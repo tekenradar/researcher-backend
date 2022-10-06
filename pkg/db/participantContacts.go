@@ -95,6 +95,20 @@ func (dbService *ResearcherDBService) CleanUpExpiredParticipantContacts(studyKey
 			bson.M{"keepContactData": false},
 		},
 	}
-	_, err := dbService.collectionRefParticipantContacts(studyKey).DeleteMany(ctx, filter)
+	update := bson.M{"$set": bson.M{
+		"contactData": nil,
+	}}
+	_, err := dbService.collectionRefParticipantContacts(studyKey).UpdateMany(ctx, filter, update)
+	return err
+}
+
+// Remove entries after certain time if not marked as permanent
+func (dbService *ResearcherDBService) DeleteParticipantContact(studyKey string, contactID string) error {
+	ctx, cancel := dbService.getContext()
+	defer cancel()
+
+	_id, _ := primitive.ObjectIDFromHex(contactID)
+	filter := bson.M{"_id": _id}
+	_, err := dbService.collectionRefParticipantContacts(studyKey).DeleteOne(ctx, filter)
 	return err
 }
