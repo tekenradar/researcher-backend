@@ -58,7 +58,6 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 	router.GET("/health", healthCheckHandle)
-	// router.Static("/app", "/var/www/html/webapp")
 	v1Root := router.Group("/v1")
 
 	v1APIHandlers := v1.NewHTTPHandler(

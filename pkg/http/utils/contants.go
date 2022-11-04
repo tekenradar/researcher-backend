@@ -1,6 +1,7 @@
 package utils
 
 const (
-	AuthCookieName = "auth"
-	TokenMaxAge    = 3600 // 86400 // in seconds
+	AuthCookieName      = "auth"
+	TokenMaxAge         = 86400 // in seconds
+	InitSessionTokenAge = 120   // seconds
 )

@@ -217,7 +217,6 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	}
 	req.IncludeMeta = &studyAPI.ResponseExportQuery_IncludeMeta{
 		Position:       c.DefaultQuery("withPositions", "false") == "true",
-		ItemVersion:    c.DefaultQuery("withItemVersions", "false") == "true",
 		InitTimes:      c.DefaultQuery("withInitTimes", "false") == "true",
 		DisplayedTimes: c.DefaultQuery("withDisplayTimes", "false") == "true",
 		ResponsedTimes: c.DefaultQuery("withResponseTimes", "false") == "true",

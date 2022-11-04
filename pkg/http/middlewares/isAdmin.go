@@ -3,6 +3,7 @@ package middlewares
 import (
 	"net/http"
 
+	"github.com/coneno/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/tekenradar/researcher-backend/pkg/jwt"
 )
@@ -18,6 +19,7 @@ func IsAdmin() gin.HandlerFunc {
 				return
 			}
 		}
+		logger.Warning.Println("missing ADMIN role")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "admin account required for this feature"})
 	}
 }

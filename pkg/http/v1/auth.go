@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/coneno/logger"
@@ -41,7 +42,7 @@ func (h *HttpEndpoints) AddAuthAPI(rg *gin.RouterGroup) {
 }
 
 func (h *HttpEndpoints) dummyLogin(c *gin.Context) {
-	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.TokenMaxAge*time.Second, []string{
+	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.InitSessionTokenAge*time.Second, []string{
 		"tekenradar",
 		"tb-only",
 		"weekly-tb",
@@ -67,6 +68,8 @@ func (h *HttpEndpoints) dummyLogin(c *gin.Context) {
 func (h *HttpEndpoints) initSession(c *gin.Context) {
 	token := c.DefaultQuery("token", "")
 
+	logger.Debug.Printf("received token %s", token)
+
 	if token == "" {
 		var err error
 		token, err = c.Cookie(utils.AuthCookieName)
@@ -84,13 +87,22 @@ func (h *HttpEndpoints) initSession(c *gin.Context) {
 		return
 	}
 
+	accessToken, err := jwt.GenerateNewToken(claims.ID, utils.TokenMaxAge*time.Second, claims.Studies, claims.Roles)
+	if err != nil {
+		logger.Error.Printf("unexpected error when generating token: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unexpected error when generating token"})
+		return
+	}
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	secure := true
 	c.SetCookie(
 		utils.AuthCookieName,
-		token,
+		accessToken,
 		utils.TokenMaxAge,
 		"/",
 		"",
-		true,
+		secure,
 		true,
 	)
 
@@ -189,73 +201,49 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	attributes := sa.GetAttributes()
-	/*groups, ok := attributes["http://schemas.xmlsoap.org/claims/Group"]
+	claimedRoles, ok := attributes["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
 	if !ok {
-		err := fmt.Errorf("group infos not found in the response token for %s", email)
+		err := fmt.Errorf("role infos not found in the response token for %s", email)
 		logger.Error.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-	groupInfos := parseSAMLgroupInfo(groups)
-	logger.Debug.Print(groupInfos)
-	*/
+
+	roles := []string{}
+	studies := []string{}
 	logger.Debug.Println(email)
 	logger.Debug.Println(attributes)
 
-	http.Redirect(w, r, "http://localhost:3001?id=1234567890", http.StatusFound)
-
-	/*
-
-		hasPermission, usedGroupInfo := checkPermission(groupInfos, instanceID, role)
-		if !hasPermission {
-			err := fmt.Errorf("'%s' is not authorized to access '%s' with role '%s'.", email, instanceID, role)
+	for _, r := range claimedRoles {
+		items := strings.Split(r, "-")
+		if len(items) != 4 {
+			err := fmt.Errorf("unexpected role in SAML token for %s: %s", email, r)
 			logger.Error.Println(err.Error())
-			logger.Debug.Printf("valid group infos are %v", groupInfos)
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
+			continue
 		}
+		studies = append(studies, items[2])
 
-	*/
-
-	/*
-		req := umAPI.LoginWithExternalIDPMsg{
-			InstanceId: instanceID,
-			Email:      email,
-			Role:       strings.ToUpper(role),
-			Customer:   usedGroupInfo.Customer,
-			GroupInfo:  strings.Join(groups, ";"),
-			Idp:        h.samlConfig.IDPUrl,
+		// isAdmin?
+		if strings.Contains(r, "admin") {
+			roles = []string{
+				jwt.ROLE_ADMIN,
+			}
 		}
+	}
 
-		resp, err := h.clients.UserManagement.LoginWithExternalIDP(context.Background(), &req)
-		if err != nil {
-			logger.Error.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
-		}
+	token, err := jwt.GenerateNewToken(
+		email,
+		utils.InitSessionTokenAge*time.Second,
+		studies,
+		roles,
+	)
 
-		loginInfos := SAMLLoginInfo{
-			Username:   email,
-			InstanceID: instanceID,
-			Role:       role,
-			Tokens: strings.Join([]string{
-				resp.Token.AccessToken,
-				resp.Token.RefreshToken,
-			}, "<!>"),
-		}
+	if err != nil {
+		logger.Error.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-		parsedTemplate, _ := template.ParseFiles(h.samlConfig.TemplatePathLoginSuccess)
-		err = parsedTemplate.Execute(w, loginInfos)
-		if err != nil {
-			logger.Error.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusForbidden)
-			return
-		}
-		if err != nil {
-			logger.Error.Println("Error executing template :", err)
-			return
-		}*/
-
-	// c.Data(http.StatusOK, "text/html; charset=utf-8", tpl.Bytes())
-	//fmt.Fprintf(w, "Logged in as: %s, Token contents, %+v!\n\n%v \n\n %s - %s \n\n%s", email, sa.GetAttributes(), groupInfos, instanceID, role, resp.Token.AccessToken)
+	url := fmt.Sprintf("%s?id=%s", h.loginSuccessRedirectURL, token)
+	http.Redirect(w, r, url, http.StatusFound)
 }

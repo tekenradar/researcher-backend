@@ -21,7 +21,7 @@ func FindResponseSlot(rootItem *types.ResponseItem, slotKey string) (*types.Resp
 	keyParts := strings.Split(slotKey, ".")
 	if len(keyParts) > 1 {
 		for _, item := range rootItem.Items {
-			res, err := FindResponseSlot(&item, strings.Join(keyParts[1:], "."))
+			res, err := FindResponseSlot(item, strings.Join(keyParts[1:], "."))
 			if err == nil {
 				return res, nil
 			}
