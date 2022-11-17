@@ -21,6 +21,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const adminRoleFromADFS = "researchadmin"
+
 func (h *HttpEndpoints) AddAuthAPI(rg *gin.RouterGroup) {
 	auth := rg.Group("/auth")
 
@@ -221,10 +223,11 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 			logger.Error.Println(err.Error())
 			continue
 		}
+
 		studies = append(studies, items[2])
 
 		// isAdmin?
-		if strings.Contains(r, "admin") {
+		if strings.Contains(strings.ToLower(r), adminRoleFromADFS) {
 			roles = []string{
 				jwt.ROLE_ADMIN,
 			}

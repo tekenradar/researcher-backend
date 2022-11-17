@@ -104,6 +104,7 @@ func shouldIncludeParticipantContact(studyInfo types.StudyInfo, event studyengin
 func extractParticipantContactInfosFromEvent(event studyengine.ExternalEventPayload) (pc types.ParticipantContact, err error) {
 	pc = types.ParticipantContact{
 		AddedAt:         time.Now().Unix(),
+		General:         &types.ContactDetailsGeneralData{},
 		ParticipantID:   event.ParticipantState.ParticipantID,
 		SessionID:       event.ParticipantState.CurrentStudySession,
 		KeepContactData: false,
