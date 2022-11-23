@@ -9,11 +9,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (dbService *ResearcherDBService) AddParticipantContact(studyKey string, pc types.ParticipantContact) (string, error) {
+func (dbService *ResearcherDBService) AddParticipantContact(substudyKey string, pc types.ParticipantContact) (string, error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
-	res, err := dbService.collectionRefParticipantContacts(studyKey).InsertOne(ctx, pc)
+	res, err := dbService.collectionRefParticipantContacts(substudyKey).InsertOne(ctx, pc)
 	if err != nil {
 		return "", err
 	}
@@ -21,7 +21,7 @@ func (dbService *ResearcherDBService) AddParticipantContact(studyKey string, pc 
 	return id.Hex(), err
 }
 
-func (dbService *ResearcherDBService) UpdateKeepParticipantContactStatus(studyKey string, contactID string, value bool) error {
+func (dbService *ResearcherDBService) UpdateKeepParticipantContactStatus(substudyKey string, contactID string, value bool) error {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
@@ -29,11 +29,11 @@ func (dbService *ResearcherDBService) UpdateKeepParticipantContactStatus(studyKe
 	filter := bson.M{"_id": _id}
 
 	update := bson.M{"$set": bson.M{"keepContactData": value}}
-	_, err := dbService.collectionRefParticipantContacts(studyKey).UpdateOne(ctx, filter, update)
+	_, err := dbService.collectionRefParticipantContacts(substudyKey).UpdateOne(ctx, filter, update)
 	return err
 }
 
-func (dbService *ResearcherDBService) AddNoteToParticipantContact(studyKey string, contactID string, note types.ContactNote) error {
+func (dbService *ResearcherDBService) AddNoteToParticipantContact(substudyKey string, contactID string, note types.ContactNote) error {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
@@ -46,11 +46,11 @@ func (dbService *ResearcherDBService) AddNoteToParticipantContact(studyKey strin
 		},
 		"$position": 0,
 	}}}
-	_, err := dbService.collectionRefParticipantContacts(studyKey).UpdateOne(ctx, filter, update)
+	_, err := dbService.collectionRefParticipantContacts(substudyKey).UpdateOne(ctx, filter, update)
 	return err
 }
 
-func (dbService *ResearcherDBService) FindParticipantContacts(studyKey string) (pcs []types.ParticipantContact, err error) {
+func (dbService *ResearcherDBService) FindParticipantContacts(substudyKey string) (pcs []types.ParticipantContact, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
@@ -59,7 +59,7 @@ func (dbService *ResearcherDBService) FindParticipantContacts(studyKey string) (
 	opts := options.FindOptions{
 		BatchSize: &batchSize,
 	}
-	cur, err := dbService.collectionRefParticipantContacts(studyKey).Find(ctx, filter, &opts)
+	cur, err := dbService.collectionRefParticipantContacts(substudyKey).Find(ctx, filter, &opts)
 	if err != nil {
 		return pcs, err
 	}
@@ -84,7 +84,7 @@ func (dbService *ResearcherDBService) FindParticipantContacts(studyKey string) (
 }
 
 // Remove entries after certain time if not marked as permanent
-func (dbService *ResearcherDBService) CleanUpExpiredParticipantContacts(studyKey string, deleteAfterInDays int) error {
+func (dbService *ResearcherDBService) CleanUpExpiredParticipantContacts(substudyKey string, deleteAfterInDays int) error {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
@@ -98,17 +98,17 @@ func (dbService *ResearcherDBService) CleanUpExpiredParticipantContacts(studyKey
 	update := bson.M{"$set": bson.M{
 		"contactData": nil,
 	}}
-	_, err := dbService.collectionRefParticipantContacts(studyKey).UpdateMany(ctx, filter, update)
+	_, err := dbService.collectionRefParticipantContacts(substudyKey).UpdateMany(ctx, filter, update)
 	return err
 }
 
 // Remove entries after certain time if not marked as permanent
-func (dbService *ResearcherDBService) DeleteParticipantContact(studyKey string, contactID string) error {
+func (dbService *ResearcherDBService) DeleteParticipantContact(substudyKey string, contactID string) error {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
 	_id, _ := primitive.ObjectIDFromHex(contactID)
 	filter := bson.M{"_id": _id}
-	_, err := dbService.collectionRefParticipantContacts(studyKey).DeleteOne(ctx, filter)
+	_, err := dbService.collectionRefParticipantContacts(substudyKey).DeleteOne(ctx, filter)
 	return err
 }

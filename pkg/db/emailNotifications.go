@@ -9,11 +9,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (dbService *ResearcherDBService) AddNotificationSubscription(studyKey string, sub types.NotificationSubscription) (string, error) {
+func (dbService *ResearcherDBService) AddNotificationSubscription(substudyKey string, sub types.NotificationSubscription) (string, error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
-	res, err := dbService.collectionRefEmailNotifications(studyKey).InsertOne(ctx, sub)
+	res, err := dbService.collectionRefEmailNotifications(substudyKey).InsertOne(ctx, sub)
 	if err != nil {
 		return "", err
 	}
@@ -21,7 +21,7 @@ func (dbService *ResearcherDBService) AddNotificationSubscription(studyKey strin
 	return id.Hex(), err
 }
 
-func (dbService *ResearcherDBService) FindNotificationSubscriptions(studyKey string, topic string) (subs []types.NotificationSubscription, err error) {
+func (dbService *ResearcherDBService) FindNotificationSubscriptions(substudyKey string, topic string) (subs []types.NotificationSubscription, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
@@ -34,7 +34,7 @@ func (dbService *ResearcherDBService) FindNotificationSubscriptions(studyKey str
 	opts := options.FindOptions{
 		BatchSize: &batchSize,
 	}
-	cur, err := dbService.collectionRefEmailNotifications(studyKey).Find(ctx, filter, &opts)
+	cur, err := dbService.collectionRefEmailNotifications(substudyKey).Find(ctx, filter, &opts)
 	if err != nil {
 		return subs, err
 	}
@@ -58,28 +58,28 @@ func (dbService *ResearcherDBService) FindNotificationSubscriptions(studyKey str
 	return subs, nil
 }
 
-func (dbService *ResearcherDBService) DeleteNotificationSubscription(studyKey string, id string) (count int64, err error) {
+func (dbService *ResearcherDBService) DeleteNotificationSubscription(substudyKey string, id string) (count int64, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
-	if studyKey == "" {
-		return 0, errors.New("studyKey must be defined")
+	if substudyKey == "" {
+		return 0, errors.New("substudyKey must be defined")
 	}
 
 	_id, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.M{"_id": _id}
 
-	res, err := dbService.collectionRefEmailNotifications(studyKey).DeleteOne(ctx, filter)
+	res, err := dbService.collectionRefEmailNotifications(substudyKey).DeleteOne(ctx, filter)
 	return res.DeletedCount, err
 }
 
-func (dbService *ResearcherDBService) DeleteEmailAllNotificationsForStudy(studyKey string) (err error) {
+func (dbService *ResearcherDBService) DeleteEmailAllNotificationsForStudy(substudyKey string) (err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
-	if studyKey == "" {
-		return errors.New("studyKey must be defined")
+	if substudyKey == "" {
+		return errors.New("substudyKey must be defined")
 	}
 
-	err = dbService.collectionRefEmailNotifications(studyKey).Drop(ctx)
+	err = dbService.collectionRefEmailNotifications(substudyKey).Drop(ctx)
 	return
 }

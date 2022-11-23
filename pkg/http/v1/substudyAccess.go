@@ -24,14 +24,14 @@ const (
 )
 
 func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
-	studiesGroup := rg.Group("/study")
+	studiesGroup := rg.Group("/substudy")
 
 	studiesGroup.Use(mw.HasValidAPIKey(h.apiKeys))
 	studiesGroup.Use(mw.ValidateToken())
 	{
 		studiesGroup.GET("/infos", h.getStudyInfos)
 
-		studyGroup := studiesGroup.Group(":studyKey")
+		studyGroup := studiesGroup.Group(":substudyKey")
 		studyGroup.Use(mw.HasAccessToStudy())
 		{
 			studyGroup.GET("/", h.getStudyInfo)
@@ -65,62 +65,62 @@ func (h *HttpEndpoints) getStudyInfos(c *gin.Context) {
 
 func (h *HttpEndpoints) getStudyInfo(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 
-	studyInfo, err := h.researcherDB.FindStudyInfo(studyKey)
+	studyInfo, err := h.researcherDB.FindStudyInfo(substudyKey)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("study info for %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("study info for %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, studyInfo)
 }
 
 func (h *HttpEndpoints) getParticipantContacts(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 
-	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	pcs, err := h.researcherDB.FindParticipantContacts(substudyKey)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
 }
 
 func (h *HttpEndpoints) changeParticipantContactKeepStatus(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 	contactID := c.Param("contactID")
 
 	keep := c.DefaultQuery("value", "") == "true"
 
-	err := h.researcherDB.UpdateKeepParticipantContactStatus(studyKey, contactID, keep)
+	err := h.researcherDB.UpdateKeepParticipantContactStatus(substudyKey, contactID, keep)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
-	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	pcs, err := h.researcherDB.FindParticipantContacts(substudyKey)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
 }
 
 func (h *HttpEndpoints) addNoteToParticipantContact(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 	contactID := c.Param("contactID")
 
 	var req types.ContactNote
@@ -130,53 +130,53 @@ func (h *HttpEndpoints) addNoteToParticipantContact(c *gin.Context) {
 		return
 	}
 
-	err := h.researcherDB.AddNoteToParticipantContact(studyKey, contactID, req)
+	err := h.researcherDB.AddNoteToParticipantContact(substudyKey, contactID, req)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
-	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	pcs, err := h.researcherDB.FindParticipantContacts(substudyKey)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("partcipant contacts note added in study %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("partcipant contacts note added in study %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
 }
 
 func (h *HttpEndpoints) deleteParticipantContact(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 	contactID := c.Param("contactID")
 
-	err := h.researcherDB.DeleteParticipantContact(studyKey, contactID)
+	err := h.researcherDB.DeleteParticipantContact(substudyKey, contactID)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
-	pcs, err := h.researcherDB.FindParticipantContacts(studyKey)
+	pcs, err := h.researcherDB.FindParticipantContacts(substudyKey)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("partcipant contacts note added in study %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("partcipant contacts note added in study %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
 }
 
 func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 	datasetKey := c.Param("datasetKey")
 
-	studyInfo, err := h.researcherDB.FindStudyInfo(studyKey)
+	studyInfo, err := h.researcherDB.FindStudyInfo(substudyKey)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
@@ -191,7 +191,7 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 		}
 	}
 	if dataset == nil {
-		msg := fmt.Sprintf("no dataset info found in study %s for dataset id %s", studyKey, datasetKey)
+		msg := fmt.Sprintf("no dataset info found in study %s for dataset id %s", substudyKey, datasetKey)
 		logger.Error.Println(msg)
 		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 		return
@@ -279,7 +279,7 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 	contentType := "text/csv"
 
 	extraHeaders := map[string]string{
-		"Content-Disposition": `attachment; filename=` + fmt.Sprintf("%s_%s.csv", studyKey, dataset.SurveyKey),
+		"Content-Disposition": `attachment; filename=` + fmt.Sprintf("%s_%s.csv", substudyKey, dataset.SurveyKey),
 	}
 
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)
@@ -287,23 +287,23 @@ func (h *HttpEndpoints) downloadDataset(c *gin.Context) {
 
 func (h *HttpEndpoints) fetchNotificationSubscriptions(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 	topic := c.DefaultQuery("topic", "")
 
-	subs, err := h.researcherDB.FindNotificationSubscriptions(studyKey, topic)
+	subs, err := h.researcherDB.FindNotificationSubscriptions(substudyKey, topic)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("email notification subs for %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("email notification subs for %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"emailNotifications": subs})
 }
 
 func (h *HttpEndpoints) addNotificationSubscription(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 
 	var req types.NotificationSubscription
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -312,15 +312,15 @@ func (h *HttpEndpoints) addNotificationSubscription(c *gin.Context) {
 		return
 	}
 
-	_, err := h.researcherDB.AddNotificationSubscription(studyKey, req)
+	_, err := h.researcherDB.AddNotificationSubscription(substudyKey, req)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("email notification added for %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("email notification added for %s fetched by '%s'", substudyKey, token.ID)
 
-	subs, err := h.researcherDB.FindNotificationSubscriptions(studyKey, req.Topic)
+	subs, err := h.researcherDB.FindNotificationSubscriptions(substudyKey, req.Topic)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
@@ -332,16 +332,16 @@ func (h *HttpEndpoints) addNotificationSubscription(c *gin.Context) {
 
 func (h *HttpEndpoints) deleteNotificationSubscription(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
-	studyKey := c.Param("studyKey")
+	substudyKey := c.Param("substudyKey")
 	notificationID := c.Param("notificationID")
 
-	_, err := h.researcherDB.DeleteNotificationSubscription(studyKey, notificationID)
+	_, err := h.researcherDB.DeleteNotificationSubscription(substudyKey, notificationID)
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	logger.Info.Printf("email notification deleted for %s fetched by '%s'", studyKey, token.ID)
+	logger.Info.Printf("email notification deleted for %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }

@@ -27,24 +27,24 @@ func (dbService *ResearcherDBService) SaveStudyInfo(studyInfo types.StudyInfo) (
 	return elem, err
 }
 
-func (dbService *ResearcherDBService) FindStudyInfo(studyKey string) (types.StudyInfo, error) {
+func (dbService *ResearcherDBService) FindStudyInfo(substudyKey string) (types.StudyInfo, error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
-	filter := bson.M{"key": studyKey}
+	filter := bson.M{"key": substudyKey}
 
 	elem := types.StudyInfo{}
 	err := dbService.collectionRefStudyInfos().FindOne(ctx, filter).Decode(&elem)
 	return elem, err
 }
 
-func (dbService *ResearcherDBService) FindStudyInfosByKeys(studyKeys []string) (studyInfos []types.StudyInfo, err error) {
+func (dbService *ResearcherDBService) FindStudyInfosByKeys(substudyKeys []string) (studyInfos []types.StudyInfo, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
 	filter := bson.M{
 		"key": bson.M{
-			"$in": studyKeys,
+			"$in": substudyKeys,
 		},
 	}
 
@@ -109,14 +109,14 @@ func (dbService *ResearcherDBService) FindAllStudyInfos() (studyInfos []types.St
 	return studyInfos, nil
 }
 
-func (dbService *ResearcherDBService) DeleteStudyInfo(studyKey string) (count int64, err error) {
+func (dbService *ResearcherDBService) DeleteStudyInfo(substudyKey string) (count int64, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
 
-	if studyKey == "" {
-		return 0, errors.New("studyKey must be defined")
+	if substudyKey == "" {
+		return 0, errors.New("substudyKey must be defined")
 	}
-	filter := bson.M{"key": studyKey}
+	filter := bson.M{"key": substudyKey}
 
 	res, err := dbService.collectionRefStudyInfos().DeleteOne(ctx, filter)
 	return res.DeletedCount, err

@@ -52,17 +52,17 @@ func NewResearcherDBService(configs types.DBConfig) *ResearcherDBService {
 	return ResearcherDBService
 }
 
-//new Collection
+// new Collection
 func (dbService *ResearcherDBService) collectionRefStudyInfos() *mongo.Collection {
-	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("study-infos")
+	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("substudy-infos")
 }
 
-func (dbService *ResearcherDBService) collectionRefEmailNotifications(studyKey string) *mongo.Collection {
-	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("email-notifications-" + studyKey)
+func (dbService *ResearcherDBService) collectionRefEmailNotifications(substudyKey string) *mongo.Collection {
+	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("email-notifications-" + substudyKey)
 }
 
-func (dbService *ResearcherDBService) collectionRefParticipantContacts(studyKey string) *mongo.Collection {
-	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("participant-contacts-" + studyKey)
+func (dbService *ResearcherDBService) collectionRefParticipantContacts(substudyKey string) *mongo.Collection {
+	return dbService.DBClient.Database(dbService.DBNamePrefix + "researcherDB").Collection("participant-contacts-" + substudyKey)
 }
 
 // DB utils
