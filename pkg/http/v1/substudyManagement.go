@@ -19,7 +19,7 @@ func (h *HttpEndpoints) AddStudyManagementAPI(rg *gin.RouterGroup) {
 	{
 		studyManagementGroup.GET("", h.SM_getAllSubstudyInfos) // fetch all substudy infos (even if not explicitly member of it, since admin role)
 		studyManagementGroup.POST("", h.SM_saveSubstudyInfo)   // save study info (create or overwrite)
-		studyManagementGroup.DELETE("/:subsubstudyKey", h.SM_deleteSubstudyInfo)
+		studyManagementGroup.DELETE("/:substudyKey", h.SM_deleteSubstudyInfo)
 	}
 }
 
