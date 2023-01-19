@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/coneno/logger"
+	"github.com/tekenradar/researcher-backend/internal/config"
 	mw "github.com/tekenradar/researcher-backend/pkg/http/middlewares"
 	"github.com/tekenradar/researcher-backend/pkg/http/utils"
 	"github.com/tekenradar/researcher-backend/pkg/jwt"
@@ -44,18 +46,13 @@ func (h *HttpEndpoints) AddAuthAPI(rg *gin.RouterGroup) {
 }
 
 func (h *HttpEndpoints) dummyLogin(c *gin.Context) {
-	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.InitSessionTokenAge*time.Second, []string{
-		"tekenradar",
-		"tb-only",
-		"weekly-tb",
-		"k-em-contact",
-		"em-adult-contact",
-		"fever-adult-contact",
-		"tb-adult-contact",
-		"tb-kids-contact",
-	}, []string{
-		jwt.ROLE_ADMIN,
-	})
+	subStudyKeys := strings.Split(os.Getenv(config.ENV_DUMMY_USER_SUBSTUDY_KEYS), ",")
+
+	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.InitSessionTokenAge*time.Second,
+		subStudyKeys,
+		[]string{
+			jwt.ROLE_ADMIN,
+		})
 
 	if err != nil {
 		logger.Error.Println(err)
