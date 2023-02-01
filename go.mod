@@ -8,9 +8,9 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/influenzanet/go-utils v0.2.11
-	github.com/influenzanet/messaging-service v1.2.0
-	github.com/influenzanet/study-service v1.3.0
-	go.mongodb.org/mongo-driver v1.11.0
+	github.com/influenzanet/messaging-service v1.3.0
+	github.com/influenzanet/study-service v1.3.1
+	go.mongodb.org/mongo-driver v1.11.1
 	google.golang.org/grpc v1.50.1
 )
 

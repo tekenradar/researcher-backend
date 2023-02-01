@@ -148,8 +148,8 @@ github.com/influenzanet/messaging-service v0.8.0/go.mod h1:JnbHpEDNp/YI+GGnIr/7n
 github.com/influenzanet/messaging-service v0.8.1/go.mod h1:FXEXU/As0Kl4AVXUMMe0aP1r/QsN3JjrwOLNPG7mFnM=
 github.com/influenzanet/messaging-service v0.8.5/go.mod h1:hsiGenj7fInqQEQpfr5ABwr4oh4lunEr2maKieDz5DQ=
 github.com/influenzanet/messaging-service v0.9.3/go.mod h1:iqrekwXS8w6cUB7K3EkI3cbzFIsCJkZhpf9pTHI+QTw=
-github.com/influenzanet/messaging-service v1.2.0 h1:CpOsFsmP54eso2jdtzf+xIrLvmjhz5kXJdFxWt/gcGw=
-github.com/influenzanet/messaging-service v1.2.0/go.mod h1:zWOHX1eNU6vcZRq2+TeFQEliaZc6BkxQKaiokBq5ULA=
+github.com/influenzanet/messaging-service v1.3.0 h1:4E0pep5L1WVm3yttCWjVffhCHyy9iY5QciMTNAdkAyY=
+github.com/influenzanet/messaging-service v1.3.0/go.mod h1:/6uY3t0s46zOGWK5kIjEK80+wT3XEpk4sTgHScLCXjc=
 github.com/influenzanet/study-service v0.6.2/go.mod h1:S/inqN3mSNT0cQ3xgi8upUEXWzBIxn6CirfXzhuLZsw=
 github.com/influenzanet/study-service v0.8.0/go.mod h1:S/inqN3mSNT0cQ3xgi8upUEXWzBIxn6CirfXzhuLZsw=
 github.com/influenzanet/study-service v0.9.0/go.mod h1:/eeTlMOv7AcKfPFQLVgX5eu+dWU4QbgS6Hud6P+HDRs=
@@ -158,9 +158,9 @@ github.com/influenzanet/study-service v0.12.0/go.mod h1:fYwv5ZaD4sdz63nwLIY3kAfw
 github.com/influenzanet/study-service v0.13.1/go.mod h1:XB9KbWI4wgpYnBgIcy7W/zYaob+P4SX0/VqcRQEozJQ=
 github.com/influenzanet/study-service v0.13.2/go.mod h1:XB9KbWI4wgpYnBgIcy7W/zYaob+P4SX0/VqcRQEozJQ=
 github.com/influenzanet/study-service v0.13.5/go.mod h1:mF5ojH/KN2Wp1XdFryZ50FDbRYIHF71ircM++5VN1Hk=
-github.com/influenzanet/study-service v1.1.0/go.mod h1:v/yCtpoHq5wF43gIL3B1KxdKEMd2BDFoGAn6oz3DNes=
-github.com/influenzanet/study-service v1.3.0 h1:Gp2/NNLTdxW0JYrfqat9zE79meJCa5qNtvnDWHV7p9w=
-github.com/influenzanet/study-service v1.3.0/go.mod h1:TWB65lck9ucPnhDqdjoyi9J9pKCAR565rImHa2K0GCs=
+github.com/influenzanet/study-service v1.2.0/go.mod h1:v/yCtpoHq5wF43gIL3B1KxdKEMd2BDFoGAn6oz3DNes=
+github.com/influenzanet/study-service v1.3.1 h1:lw+5XHLk/dGLvbQYH4GH/OKb7PoHcOp2TtpkTZ1HleY=
+github.com/influenzanet/study-service v1.3.1/go.mod h1:TWB65lck9ucPnhDqdjoyi9J9pKCAR565rImHa2K0GCs=
 github.com/influenzanet/user-management-service v0.4.0-alpha/go.mod h1:hzpAlj0vcpZByruRB5IQmjiuiYuAAy2E7tkr9sc1B64=
 github.com/influenzanet/user-management-service v0.7.0/go.mod h1:0z88Izqm7YWEUFUTC7dHrN9XVG2CevyWXyNeoTkRWvk=
 github.com/influenzanet/user-management-service v0.10.0/go.mod h1:Qn1E8bFezQ1peyaC+P5dAo0PqH3G8/UNV5pnShfuwGI=
@@ -285,9 +285,9 @@ go.mongodb.org/mongo-driver v1.4.3/go.mod h1:WcMNYLx/IlOxLe6JRJiv2uXuCz6zBLndR4S
 go.mongodb.org/mongo-driver v1.5.1/go.mod h1:gRXCHX4Jo7J0IJ1oDQyUxF7jfy19UfxniMS4xxMmUqw=
 go.mongodb.org/mongo-driver v1.7.1/go.mod h1:Q4oFMbo1+MSNqICAdYMlC/zSTrwCogR4R8NzkI+yfU8=
 go.mongodb.org/mongo-driver v1.8.0/go.mod h1:0sQWfOeY63QTntERDJJ/0SuKK0T1uVSgKCuAROlKEPY=
-go.mongodb.org/mongo-driver v1.9.1/go.mod h1:0sQWfOeY63QTntERDJJ/0SuKK0T1uVSgKCuAROlKEPY=
-go.mongodb.org/mongo-driver v1.11.0 h1:FZKhBSTydeuffHj9CBjXlR8vQLee1cQyTWYPA6/tqiE=
-go.mongodb.org/mongo-driver v1.11.0/go.mod h1:s7p5vEtfbeR1gYi6pnj3c3/urpbLv2T5Sfd6Rp2HBB8=
+go.mongodb.org/mongo-driver v1.10.3/go.mod h1:z4XpeoU6w+9Vht+jAFyLgVrD+jGSQQe0+CBWFHNiHt8=
+go.mongodb.org/mongo-driver v1.11.1 h1:QP0znIRTuL0jf1oBQoAoM0C6ZJfBK4kx0Uumtv1A7w8=
+go.mongodb.org/mongo-driver v1.11.1/go.mod h1:s7p5vEtfbeR1gYi6pnj3c3/urpbLv2T5Sfd6Rp2HBB8=
 go.opentelemetry.io/proto/otlp v0.7.0/go.mod h1:PqfVotwruBrMGOCsRd/89rSnXhoiJIqeYNgFYFoEGnI=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
@@ -439,7 +439,7 @@ google.golang.org/grpc v1.36.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAG
 google.golang.org/grpc v1.37.0/go.mod h1:NREThFqKR1f3iQ6oBuvc5LadQuXVGo9rkm5ZGrQdJfM=
 google.golang.org/grpc v1.38.0/go.mod h1:NREThFqKR1f3iQ6oBuvc5LadQuXVGo9rkm5ZGrQdJfM=
 google.golang.org/grpc v1.39.1/go.mod h1:PImNr+rS9TWYb2O4/emRugxiyHZ5JyHW5F+RPnDzfrE=
-google.golang.org/grpc v1.47.0/go.mod h1:vN9eftEi1UMyUsIF80+uQXhHjbXYbm0uXoFCACuMGWk=
+google.golang.org/grpc v1.50.0/go.mod h1:ZgQEeidpAuNRZ8iRrlBKXZQP1ghovWIVhdJRyCDK+GI=
 google.golang.org/grpc v1.50.1 h1:DS/BukOZWp8s6p4Dt/tOaJaTQyPyOoCcrjroHuCeLzY=
 google.golang.org/grpc v1.50.1/go.mod h1:ZgQEeidpAuNRZ8iRrlBKXZQP1ghovWIVhdJRyCDK+GI=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=

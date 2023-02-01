@@ -105,6 +105,7 @@ func extractParticipantContactInfosFromEvent(event studyengine.ExternalEventPayl
 	pc = types.ParticipantContact{
 		AddedAt:         time.Now().Unix(),
 		General:         &types.ContactDetailsGeneralData{},
+		ContactData:     &types.ContactDetailsContactData{},
 		ParticipantID:   event.ParticipantState.ParticipantID,
 		SessionID:       event.ParticipantState.CurrentStudySession,
 		KeepContactData: false,
