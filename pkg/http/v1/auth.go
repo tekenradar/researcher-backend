@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/coneno/logger"
+	"github.com/tekenradar/researcher-backend/internal/config"
 	mw "github.com/tekenradar/researcher-backend/pkg/http/middlewares"
 	"github.com/tekenradar/researcher-backend/pkg/http/utils"
 	"github.com/tekenradar/researcher-backend/pkg/jwt"
@@ -174,15 +176,18 @@ type SAMLLoginInfo struct {
 }
 
 func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
+	urlForFailedLogin := os.Getenv(config.ENV_SAML_LOGIN_FAILED_REDIRECT_URL)
 	s := samlsp.SessionFromContext(r.Context())
 	if s == nil {
 		logger.Error.Println("session not found")
+		http.Redirect(w, r, urlForFailedLogin, http.StatusForbidden)
 		return
 	}
 
 	jwtSessionClaims, ok := s.(samlsp.JWTSessionClaims)
 	if !ok {
 		logger.Error.Println("Unable to decode session into JWTSessionClaims")
+		http.Redirect(w, r, urlForFailedLogin, http.StatusForbidden)
 		return
 	}
 
@@ -191,15 +196,17 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 	sa, ok := s.(samlsp.SessionWithAttributes)
 	if !ok {
 		logger.Error.Println("attributes not found")
+		http.Redirect(w, r, urlForFailedLogin, http.StatusForbidden)
 		return
 	}
 
 	attributes := sa.GetAttributes()
-	claimedRoles, ok := attributes["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
+
+	claimedRoles, ok := attributes[os.Getenv(config.ENV_SAML_ATTRIBUTE_FOR_TEKENRADAR_ACCESS)]
 	if !ok {
 		err := fmt.Errorf("role infos not found in the response token for %s", email)
 		logger.Error.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusForbidden)
+		http.Redirect(w, r, urlForFailedLogin, http.StatusForbidden)
 		return
 	}
 
@@ -207,31 +214,39 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 	logger.Debug.Println(email)
 	logger.Debug.Println(attributes)
 
+	hasAccessToTekenradar := false
 	for _, r := range claimedRoles {
-		items := strings.Split(r, "-")
-		if len(items) != 4 {
-			err := fmt.Errorf("unexpected role in SAML token for %s: %s", email, r)
-			logger.Error.Println(err.Error())
-			continue
+		// convert string to lowercase
+		r = strings.ToLower(r)
+		if strings.Contains(r, "tekenradar") {
+			hasAccessToTekenradar = true
+			break
 		}
+	}
+	if !hasAccessToTekenradar {
+		err := fmt.Errorf("user %s has no access to tekenradar", email)
+		logger.Error.Println(err.Error())
+		http.Redirect(w, r, urlForFailedLogin, http.StatusForbidden)
+		return
+	}
 
-		// isAdmin?
-		if strings.Contains(strings.ToLower(r), adminRoleFromADFS) {
-			roles = []string{
-				jwt.ROLE_ADMIN,
-			}
+	// check if user is a research admin
+	researchAdmins := os.Getenv(config.ENV_RESEARCHADMIN_EMAILS)
+	if strings.Contains(researchAdmins, email) {
+		roles = []string{
+			jwt.ROLE_ADMIN,
 		}
 	}
 
+	// prepare token
 	token, err := jwt.GenerateNewToken(
 		email,
 		utils.InitSessionTokenAge*time.Second,
 		roles,
 	)
-
 	if err != nil {
 		logger.Error.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Redirect(w, r, urlForFailedLogin, http.StatusForbidden)
 		return
 	}
 
