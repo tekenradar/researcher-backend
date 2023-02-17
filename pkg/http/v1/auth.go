@@ -9,12 +9,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/coneno/logger"
-	"github.com/tekenradar/researcher-backend/internal/config"
 	mw "github.com/tekenradar/researcher-backend/pkg/http/middlewares"
 	"github.com/tekenradar/researcher-backend/pkg/http/utils"
 	"github.com/tekenradar/researcher-backend/pkg/jwt"
@@ -46,10 +44,7 @@ func (h *HttpEndpoints) AddAuthAPI(rg *gin.RouterGroup) {
 }
 
 func (h *HttpEndpoints) dummyLogin(c *gin.Context) {
-	subStudyKeys := strings.Split(os.Getenv(config.ENV_DUMMY_USER_SUBSTUDY_KEYS), ",")
-
 	token, err := jwt.GenerateNewToken("testaccount@rivm.nl", utils.InitSessionTokenAge*time.Second,
-		subStudyKeys,
 		[]string{
 			jwt.ROLE_ADMIN,
 		})
@@ -86,7 +81,7 @@ func (h *HttpEndpoints) initSession(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := jwt.GenerateNewToken(claims.ID, utils.TokenMaxAge*time.Second, claims.Studies, claims.Roles)
+	accessToken, err := jwt.GenerateNewToken(claims.ID, utils.TokenMaxAge*time.Second, claims.Roles)
 	if err != nil {
 		logger.Error.Printf("unexpected error when generating token: %v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unexpected error when generating token"})
@@ -209,7 +204,6 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roles := []string{}
-	studies := []string{}
 	logger.Debug.Println(email)
 	logger.Debug.Println(attributes)
 
@@ -220,8 +214,6 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 			logger.Error.Println(err.Error())
 			continue
 		}
-
-		studies = append(studies, items[2])
 
 		// isAdmin?
 		if strings.Contains(strings.ToLower(r), adminRoleFromADFS) {
@@ -234,7 +226,6 @@ func (h *HttpEndpoints) loginWithSAML(w http.ResponseWriter, r *http.Request) {
 	token, err := jwt.GenerateNewToken(
 		email,
 		utils.InitSessionTokenAge*time.Second,
-		studies,
 		roles,
 	)
 

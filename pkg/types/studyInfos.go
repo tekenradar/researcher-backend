@@ -5,12 +5,15 @@ import (
 )
 
 type StudyInfo struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Key         string             `bson:"key" json:"key"`
-	Name        string             `bson:"name" json:"name"`
-	Description string             `bson:"description" json:"description"`
-	StudyColor  string             `bson:"studyColor" json:"studyColor"`
-	Features    struct {
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Key           string             `bson:"key" json:"key"`
+	Name          string             `bson:"name" json:"name"`
+	Description   string             `bson:"description" json:"description"`
+	StudyColor    string             `bson:"studyColor" json:"studyColor"`
+	AccessControl struct {
+		Emails []string `bson:"emails" json:"emails"`
+	} `bson:"accessControl" json:"accessControl"`
+	Features struct {
 		DatasetExporter bool `bson:"datasetExporter" json:"datasetExporter"`
 		Contacts        bool `bson:"contacts" json:"contacts"`
 	} `bson:"features" json:"features"`

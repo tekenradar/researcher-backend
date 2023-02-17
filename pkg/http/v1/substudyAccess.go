@@ -32,7 +32,7 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 		studiesGroup.GET("/infos", h.getStudyInfos)
 
 		studyGroup := studiesGroup.Group(":substudyKey")
-		studyGroup.Use(mw.HasAccessToStudy())
+		studyGroup.Use(mw.HasAccessToStudy(h.researcherDB))
 		{
 			studyGroup.GET("/", h.getStudyInfo)
 			studyGroup.GET("/data/:datasetKey", h.downloadDataset) // ? from=1213123&until=12313212
@@ -52,7 +52,7 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 func (h *HttpEndpoints) getStudyInfos(c *gin.Context) {
 	token := c.MustGet("validatedToken").(*jwt.UserClaims)
 
-	studyInfos, err := h.researcherDB.FindStudyInfosByKeys(token.Studies)
+	studyInfos, err := h.researcherDB.FindAllStudyInfos()
 	if err != nil {
 		logger.Error.Printf("%v", err)
 		c.JSON(http.StatusOK, gin.H{"studyInfos": []types.StudyInfo{}})
@@ -60,7 +60,28 @@ func (h *HttpEndpoints) getStudyInfos(c *gin.Context) {
 	}
 	logger.Info.Printf("study infos fetched by '%s'", token.ID)
 
+	studyInfos = filterStudyInfos(studyInfos, token.ID)
 	c.JSON(http.StatusOK, gin.H{"studyInfos": studyInfos})
+}
+
+func filterStudyInfos(studyInfos []types.StudyInfo, email string) []types.StudyInfo {
+	var filteredInfos []types.StudyInfo
+	for _, info := range studyInfos {
+		if contains(info.AccessControl.Emails, email) {
+			filteredInfos = append(filteredInfos, info)
+		}
+	}
+	return filteredInfos
+}
+
+// method to check if value is in array
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *HttpEndpoints) getStudyInfo(c *gin.Context) {
