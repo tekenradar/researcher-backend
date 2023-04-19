@@ -6,12 +6,22 @@ import (
 	"github.com/tekenradar/researcher-backend/pkg/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (dbService *ResearcherDBService) AddNotificationSubscription(substudyKey string, sub types.NotificationSubscription) (string, error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()
+
+	dbService.collectionRefEmailNotifications(substudyKey).Indexes().CreateOne(ctx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "topic", Value: 1},
+				{Key: "email", Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
+		})
 
 	res, err := dbService.collectionRefEmailNotifications(substudyKey).InsertOne(ctx, sub)
 	if err != nil {
