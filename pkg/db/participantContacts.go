@@ -50,6 +50,18 @@ func (dbService *ResearcherDBService) AddNoteToParticipantContact(substudyKey st
 	return err
 }
 
+func (dbService *ResearcherDBService) FindParticipantContactByID(substudyKey string, id string) (pcs types.ParticipantContact, err error) {
+	ctx, cancel := dbService.getContext()
+	defer cancel()
+
+	_id, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": _id}
+
+	elem := types.ParticipantContact{}
+	err = dbService.collectionRefParticipantContacts(substudyKey).FindOne(ctx, filter).Decode(&elem)
+	return elem, err
+}
+
 func (dbService *ResearcherDBService) FindParticipantContacts(substudyKey string) (pcs []types.ParticipantContact, err error) {
 	ctx, cancel := dbService.getContext()
 	defer cancel()

@@ -37,6 +37,7 @@ func (h *HttpEndpoints) AddStudyAccessAPI(rg *gin.RouterGroup) {
 			studyGroup.GET("/", h.getStudyInfo)
 			studyGroup.GET("/data/:datasetKey", h.downloadDataset) // ? from=1213123&until=12313212
 			studyGroup.GET("/participant-contacts", h.getParticipantContacts)
+			studyGroup.GET("/participant-contacts/:contactID", h.getParticipantContact)
 			studyGroup.GET("/participant-contacts/:contactID/keep", h.changeParticipantContactKeepStatus) // ?value=true
 			studyGroup.POST("/participant-contacts/:contactID/note", h.addNoteToParticipantContact)
 			studyGroup.DELETE("/participant-contacts/:contactID", h.deleteParticipantContact)
@@ -112,6 +113,22 @@ func (h *HttpEndpoints) getParticipantContacts(c *gin.Context) {
 	logger.Info.Printf("partcipant contacts for %s fetched by '%s'", substudyKey, token.ID)
 
 	c.JSON(http.StatusOK, gin.H{"participantContacts": pcs})
+}
+
+func (h *HttpEndpoints) getParticipantContact(c *gin.Context) {
+	token := c.MustGet("validatedToken").(*jwt.UserClaims)
+	substudyKey := c.Param("substudyKey")
+	contactID := c.Param("contactID")
+
+	pc, err := h.researcherDB.FindParticipantContactByID(substudyKey, contactID)
+	if err != nil {
+		logger.Error.Printf("%v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	logger.Info.Printf("partcipant contact for %s fetched by '%s'", substudyKey, token.ID)
+
+	c.JSON(http.StatusOK, gin.H{"participantContact": pc})
 }
 
 func (h *HttpEndpoints) changeParticipantContactKeepStatus(c *gin.Context) {
