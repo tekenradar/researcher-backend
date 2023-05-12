@@ -168,6 +168,8 @@ func (h *HttpEndpoints) addNoteToParticipantContact(c *gin.Context) {
 		return
 	}
 
+	req.Author = token.ID
+
 	err := h.researcherDB.AddNoteToParticipantContact(substudyKey, contactID, req)
 	if err != nil {
 		logger.Error.Printf("%v", err)

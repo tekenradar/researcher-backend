@@ -2,20 +2,29 @@ package middlewares
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/coneno/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/tekenradar/researcher-backend/pkg/http/utils"
 	"github.com/tekenradar/researcher-backend/pkg/jwt"
 )
 
 // ValidateToken reads the token from the request and validates it
 func ValidateToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, err := c.Cookie(utils.AuthCookieName)
-		if err != nil {
-			logger.Error.Println(err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "no Authorization token found"})
+		var token string
+		req := c.Request
+		tokens, ok := req.Header["Authorization"]
+		if ok && len(tokens) > 0 {
+			token = tokens[0]
+			token = strings.TrimPrefix(token, "Bearer ")
+			if len(token) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "no Authorization token found"})
+				c.Abort()
+				return
+			}
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "no Authorization token found"})
 			c.Abort()
 			return
 		}
